@@ -22,30 +22,41 @@
 ## 技术栈
 
 - **前端**：Vanilla JavaScript (无框架依赖)
-- **样式**：Tailwind CSS CDN
+- **样式**：Tailwind CSS (构建输出，非 CDN)
+- **构建**：Tailwind CLI
 - **存储**：localStorage
 - **图标**：Material Symbols
 - **字体**：Lexend
 
 ## 快速开始
 
-### 本地运行
+### 开发环境
 ```bash
 # 进入项目目录
 cd game-scoreboard
 
-# 启动静态服务器
-npx serve src -l 3000
+# 安装依赖
+npm install
+
+# 开发模式（监听 CSS 变化）
+npm run watch
+
+# 启动静态服务器（另一个终端）
+npm run dev
 
 # 访问 http://localhost:3000
 ```
 
-### 直接部署
-将 `src/` 目录部署到任意静态服务器即可：
-- GitHub Pages
-- Vercel
-- Netlify
-- 自建服务器
+### 生产构建
+```bash
+# 构建 CSS
+npm run build
+
+# 部署 src/ 目录到服务器
+```
+
+### 自动部署
+推送到 main 分支会自动触发 GitHub Actions 部署。
 
 ## 使用说明
 

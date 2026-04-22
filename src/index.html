@@ -4,31 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>游戏积分记录 - ScoreTrack</title>
-    <!-- 关键：Tailwind 配置必须在 CDN 加载前定义 -->
-    <script>
-        window.tailwind = window.tailwind || {};
-        window.tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#0052ff',
-                        'primary-container': '#b7c4ff',
-                        'on-primary': '#ffffff',
-                        secondary: '#6b7280',
-                        'secondary-container': '#f3f4f6',
-                        surface: '#ffffff',
-                        'surface-variant': '#f3f4f6',
-                        'on-surface': '#111827',
-                        'on-surface-variant': '#6b7280',
-                        outline: '#e5e7eb',
-                        error: '#ef4444',
-                    }
-                }
-            }
-        };
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 主题初始化（必须在任何样式之前） -->
     <script>
         (() => {
             try {
@@ -45,19 +21,12 @@
             }
         })();
     </script>
+    <!-- Tailwind CSS 构建输出 -->
+    <link rel="stylesheet" href="css/output.css">
+    <!-- 第三方库 -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    <style>
-        * { font-family: 'Lexend', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        ::-webkit-scrollbar { display: none; }
-        body { -ms-overflow-style: none; scrollbar-width: none; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .slide-action { transform: translateX(0); transition: transform 0.2s ease; }
-        .slide-action.swiped { transform: translateX(-80px); }
-    </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
     <!-- Header -->

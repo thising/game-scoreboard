@@ -15,4 +15,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
-*.swo
+*.swonode_modules/
+.DS_Store
+*.log
