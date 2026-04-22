@@ -1142,6 +1142,11 @@
         theme.init();
         document.getElementById('themeIcon').textContent = theme.getIcon();
 
+        // 初始化语录（在主题之后）
+        if (typeof quotes !== 'undefined') {
+            quotes.init();
+        }
+
         // 初始渲染
         pages.restoreFromUrl();
     </script>

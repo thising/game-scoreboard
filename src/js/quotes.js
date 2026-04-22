@@ -667,5 +667,4 @@ const quotes = {
     }
 };
 
-// 自动初始化
-quotes.init();
+// 注意：quotes.init() 在 index.html 中显式调用，不在此处自动执行
