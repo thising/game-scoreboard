@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主题切换修复验证</title>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0052ff',
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen p-6 transition-colors duration-300">
+    <div class="max-w-md mx-auto space-y-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">主题切换修复验证</h1>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+            <p class="text-gray-700 dark:text-gray-300">HTML class: <span id="htmlClass" class="font-mono text-primary"></span></p>
+            <p class="text-gray-700 dark:text-gray-300">localStorage theme: <span id="storageTheme" class="font-mono text-primary"></span></p>
+        </div>
+        
+        <button id="themeToggle" class="w-full bg-primary text-white rounded-xl py-3 flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors">
+            <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+            <span>切换主题 (light → dark → auto)</span>
+        </button>
+        
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4">
+            <p class="text-gray-900 dark:text-white font-medium">语录容器测试</p>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">应该随主题变化</p>
+        </div>
+        
+        <div class="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl p-4">
+            <p class="text-green-800 dark:text-green-200 text-sm">
+                ✅ 如果此页面主题切换正常，说明修复成功
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'scoretrack_settings';
+        
+        const theme = {
+            MODES: ['light', 'dark', 'auto'],
+            
+            getSettings() {
+                try {
+                    const data = localStorage.getItem(STORAGE_KEY);
+                    return data ? JSON.parse(data) : { theme: 'auto' };
+                } catch (e) {
+                    return { theme: 'auto' };
+                }
+            },
+            
+            saveSettings(settings) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+            },
+            
+            normalizeMode(mode) {
+                return this.MODES.includes(mode) ? mode : 'auto';
+            },
+            
+            prefersDark() {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches;
+            },
+            
+            apply(mode) {
+                const normalizedMode = this.normalizeMode(mode);
+                const isDark = normalizedMode === 'dark' || 
+                    (normalizedMode === 'auto' && this.prefersDark());
+                document.documentElement.classList.toggle('dark', isDark);
+                
+                const settings = this.getSettings();
+                settings.theme = normalizedMode;
+                this.saveSettings(settings);
+                
+                this.updateUI();
+            },
+            
+            toggle() {
+                const settings = this.getSettings();
+                const current = this.normalizeMode(settings.theme);
+                const currentIndex = this.MODES.indexOf(current);
+                const nextMode = this.MODES[(currentIndex + 1) % this.MODES.length];
+                this.apply(nextMode);
+                return nextMode;
+            },
+            
+            getIcon() {
+                const settings = this.getSettings();
+                const current = this.normalizeMode(settings.theme);
+                if (current === 'dark') return 'dark_mode';
+                if (current === 'light') return 'light_mode';
+                return 'brightness_auto';
+            },
+            
+            updateUI() {
+                const settings = this.getSettings();
+                const current = this.normalizeMode(settings.theme);
+                const isDark = document.documentElement.classList.contains('dark');
+                
+                document.getElementById('htmlClass').textContent = document.documentElement.className || '(无)';
+                document.getElementById('storageTheme').textContent = current;
+                document.getElementById('themeIcon').textContent = this.getIcon();
+            },
+            
+            init() {
+                const settings = this.getSettings();
+                this.apply(settings.theme);
+            }
+        };
+        
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            theme.toggle();
+        });
+        
+        // 初始化
+        theme.init();
+    </script>
+</body>
+</html>

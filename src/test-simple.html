@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单主题测试</title>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0052ff',
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen p-6">
+    <div class="max-w-md mx-auto space-y-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">简单主题测试</h1>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+            <p class="text-gray-700 dark:text-gray-300">这个盒子应该随主题变色</p>
+        </div>
+        
+        <button onclick="toggleDark()" class="w-full bg-primary text-white rounded-xl py-3">
+            切换 dark 类
+        </button>
+        
+        <p id="status" class="text-gray-600 dark:text-gray-400"></p>
+    </div>
+
+    <script>
+        function toggleDark() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            document.getElementById('status').textContent = 
+                'dark class: ' + (html.classList.contains('dark') ? '存在' : '不存在');
+        }
+        
+        // 初始状态
+        document.getElementById('status').textContent = 
+            'dark class: ' + (document.documentElement.classList.contains('dark') ? '存在' : '不存在');
+    </script>
+</body>
+</html>
