@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>游戏积分记录 - ScoreTrack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0052ff',
+                        'primary-container': '#b7c4ff',
+                        'on-primary': '#ffffff',
+                        secondary: '#6b7280',
+                        'secondary-container': '#f3f4f6',
+                        surface: '#ffffff',
+                        'surface-variant': '#f3f4f6',
+                        'on-surface': '#111827',
+                        'on-surface-variant': '#6b7280',
+                        outline: '#e5e7eb',
+                        error: '#ef4444',
+                    }
+                }
+            }
+        };
+    </script>
+    <script>
+        (() => {
+            try {
+                const settings = JSON.parse(localStorage.getItem('scoretrack_settings') || '{}');
+                const mode = settings.theme || 'auto';
+                const isDark = mode === 'dark' ||
+                    (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
+            } catch (e) {
+                document.documentElement.classList.toggle(
+                    'dark',
+                    window.matchMedia('(prefers-color-scheme: dark)').matches
+                );
+            }
+        })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Lexend', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { display: none; }
+        body { -ms-overflow-style: none; scrollbar-width: none; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .slide-action { transform: translateX(0); transition: transform 0.2s ease; }
+        .slide-action.swiped { transform: translateX(-80px); }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
+            <button id="backBtn" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hidden">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <div class="w-10" id="headerLeft"></div>
+            <h1 class="text-xl font-bold text-primary">游戏积分</h1>
+            <button id="themeToggle" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-md mx-auto px-4 py-6">
+        <!-- Page: Home -->
+        <div id="page-home" class="page active">
+            <section class="mb-6">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4" id="greeting">开始记录吧！</h2>
+                <button onclick="pages.show('create')" class="w-full bg-primary text-white rounded-xl py-4 px-6 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all active:scale-[0.98]">
+                    <span class="material-symbols-outlined">add</span>
+                    <span class="font-semibold">开始新活动</span>
+                </button>
+            </section>
+
+            <section class="mb-6" id="activeSection">
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">进行中</h3>
+                <div id="activeList" class="space-y-3"></div>
+            </section>
+
+            <section>
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">历史记录</h3>
+                <div id="historyList" class="space-y-3"></div>
+            </section>
+        </div>
+
+        <!-- Page: Create -->
+        <div id="page-create" class="page">
+            <form id="createForm" class="space-y-6">
+                <div>
+                    <label for="createActivityName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">活动名称</label>
+                    <input type="text" id="createActivityName" required
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all dark:bg-gray-800 dark:text-white"
+                        placeholder="例如：周五扑克夜">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">地点（可选）</label>
+                    <input type="text" id="location"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all dark:bg-gray-800 dark:text-white"
+                        placeholder="添加地点">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">参与人数</label>
+                    <div class="flex items-center gap-4">
+                        <input type="range" id="playerCount" min="2" max="10" value="4"
+                            class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                        <span id="playerCountDisplay" class="text-2xl font-bold text-primary w-8 text-center">4</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>2人</span>
+                        <span>10人</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">积分单位</label>
+                    <div class="grid grid-cols-6 gap-2" id="scoreUnitGrid"></div>
+                    <input type="hidden" id="scoreUnit" value="1">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">玩家昵称</label>
+                    <div id="playerInputs" class="space-y-3"></div>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                    开始记录
+                </button>
+            </form>
+        </div>
+
+        <!-- Page: Activity -->
+        <div id="page-activity" class="page">
+            <div id="activityInfo" class="mb-6">
+                <div class="flex items-start justify-between mb-2">
+                    <h2 id="activityTitle" class="text-2xl font-bold text-gray-900 dark:text-white"></h2>
+                    <span id="activityStatus" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
+                        进行中
+                    </span>
+                </div>
+                <div class="flex items-center gap-4 text-sm text-gray-500">
+                    <span id="activityTime"></span>
+                    <span id="activityLocation" class="hidden"></span>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-2 gap-3 mb-6" id="statsGrid">
+                <!-- 动态生成 -->
+            </div>
+
+            <!-- 排行榜 -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <h3 class="font-semibold text-gray-900 dark:text-white">排行榜</h3>
+                </div>
+                <div id="leaderboard" class="divide-y divide-gray-100 dark:divide-gray-700"></div>
+            </div>
+
+            <!-- 最近轮次 -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold text-gray-900 dark:text-white">最近轮次</h3>
+                    <button onclick="pages.show('rounds', state.currentActivityId)" class="text-sm text-primary hover:text-blue-600">查看全部</button>
+                </div>
+                <div id="recentRounds" class="space-y-3"></div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="space-y-3">
+                <button onclick="pages.show('round', state.currentActivityId)" class="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">add</span>
+                    录入本轮
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="actions.finishActivity(state.currentActivityId)" class="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        结束活动
+                    </button>
+                    <button onclick="actions.shareActivity(state.currentActivityId)" class="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">share</span>
+                        分享
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Round -->
+        <div id="page-round" class="page">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white" id="roundTitle">录入积分</h2>
+                <p class="text-sm text-gray-500 mt-1">本轮积分必须平衡（总和为0）</p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">积分单位</label>
+                <div class="grid grid-cols-6 gap-2" id="roundScoreUnitGrid"></div>
+            </div>
+
+            <div id="balanceWarning" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+                <span class="material-symbols-outlined align-middle mr-1">error</span>
+                本轮积分必须平衡（总和为0）
+            </div>
+
+            <div id="roundPlayersList" class="space-y-4 mb-6"></div>
+
+            <button onclick="actions.saveRound()" id="saveRoundBtn"
+                class="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">save</span>
+                保存本轮
+            </button>
+        </div>
+
+        <!-- Page: Rounds -->
+        <div id="page-rounds" class="page">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">轮次历史</h2>
+            </div>
+
+            <div class="mb-4">
+                <div class="flex gap-2">
+                    <input type="number" id="jumpInput" placeholder="跳转到轮次..."
+                        class="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all dark:bg-gray-800 dark:text-white">
+                    <button onclick="actions.jumpToRound()" class="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors">
+                        跳转
+                    </button>
+                </div>
+            </div>
+
+            <div id="roundsList" class="space-y-3"></div>
+
+            <div id="emptyRounds" class="hidden text-center py-12">
+                <span class="material-symbols-outlined text-6xl text-gray-300">history</span>
+                <p class="text-gray-500 mt-4">暂无轮次记录</p>
+            </div>
+        </div>
+
+        <!-- Page: Results -->
+        <div id="page-results" class="page">
+            <div id="shareContent" class="bg-white dark:bg-gray-800 p-6 rounded-2xl mb-6">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-yellow-100 mb-4">
+                        <span class="material-symbols-outlined text-4xl text-yellow-500">emoji_events</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2" id="winnerName">-</h2>
+                    <p class="text-gray-500">最终胜者</p>
+                    <div class="text-5xl font-bold text-primary mt-4" id="winnerScore">-</div>
+                    <p class="text-gray-400 mt-2">最终得分</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-8" id="resultStatsGrid">
+                    <!-- 动态生成 -->
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-8">
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-3">活动信息</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">活动名称</span>
+                            <span class="text-gray-900 dark:text-gray-100" id="resultActivityName">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">开始时间</span>
+                            <span class="text-gray-900 dark:text-gray-100" id="resultStartTime">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">结束时间</span>
+                            <span class="text-gray-900 dark:text-gray-100" id="resultEndTime">-</span>
+                        </div>
+                        <div class="flex justify-between" id="resultLocationRow">
+                            <span class="text-gray-500">地点</span>
+                            <span class="text-gray-900 dark:text-gray-100" id="resultLocation">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-4">最终排名</h3>
+                    <div id="resultLeaderboard" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="actions.generateShareImage()"
+                    class="w-full bg-primary text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">image</span>
+                    生成分享图片
+                </button>
+                <button onclick="pages.show('home')"
+                    class="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">home</span>
+                    返回首页
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // ============================================
+        // 全局状态
+        // ============================================
+        const state = {
+            currentActivity: null,
+            currentActivityId: null,
+            currentRoundScores: [],
+            currentRoundUnit: 1,
+            editingRoundIndex: -1,
+            roundReturnPage: 'activity'
+        };
+
+        // ============================================
+        // 页面导航
+        // ============================================
+        const pages = {
+            currentPage: 'home',
+            activityPages: new Set(['activity', 'round', 'rounds', 'results']),
+
+            getActivityIdForPage(pageName, activityId = null) {
+                return this.activityPages.has(pageName) ? (activityId || state.currentActivityId) : null;
+            },
+
+            getRoute(pageName, activityId = null) {
+                const params = new URLSearchParams();
+                if (pageName && pageName !== 'home') {
+                    params.set('page', pageName);
+                }
+                if (activityId) {
+                    params.set('activity', activityId);
+                }
+                const query = params.toString();
+                return `${window.location.pathname}${query ? `?${query}` : ''}`;
+            },
+
+            pushRoute(pageName, activityId = null) {
+                const url = this.getRoute(pageName, activityId);
+                const historyState = { page: pageName, activityId };
+                if (window.location.pathname + window.location.search === url) {
+                    history.replaceState(historyState, '', url);
+                    return;
+                }
+                history.pushState(historyState, '', url);
+            },
+
+            parseRoute() {
+                const params = new URLSearchParams(window.location.search);
+                return {
+                    page: params.get('page') || 'home',
+                    activityId: params.get('activity')
+                };
+            },
+
+            restoreFromUrl() {
+                const route = this.parseRoute();
+                this.show(route.page, route.activityId, { replace: true });
+            },
+
+            /**
+             * 显示指定页面
+             * @param {string} pageName - 页面名称
+             * @param {string} activityId - 活动ID（可选）
+             * @param {Object} options - 导航选项
+             */
+            show(pageName, activityId = null, options = {}) {
+                const target = document.getElementById(`page-${pageName}`);
+                if (!target) {
+                    this.show('home', null, { replace: true });
+                    return;
+                }
+
+                if (activityId) {
+                    state.currentActivityId = activityId;
+                }
+
+                const routeActivityId = this.getActivityIdForPage(pageName, activityId);
+
+                if (this.activityPages.has(pageName) && !routeActivityId) {
+                    this.show('home', null, { replace: true });
+                    return;
+                }
+
+                if (options.replace) {
+                    history.replaceState({ page: pageName, activityId: routeActivityId }, '', this.getRoute(pageName, routeActivityId));
+                } else if (!options.skipHistory) {
+                    this.pushRoute(pageName, routeActivityId);
+                }
+
+                // 隐藏所有页面
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                // 显示目标页面
+                target.classList.add('active');
+                this.currentPage = pageName;
+
+                // 更新返回按钮
+                this.updateBackButton(pageName);
+
+                // 初始化页面
+                const initMap = {
+                    home: () => renderers.home(),
+                    create: () => renderers.create(),
+                    activity: () => {
+                        renderers.activity();
+                    },
+                    round: () => renderers.round(),
+                    rounds: () => renderers.rounds(),
+                    results: () => {
+                        renderers.results();
+                    }
+                };
+
+                if (initMap[pageName]) {
+                    initMap[pageName]();
+                }
+            },
+
+            /**
+             * 更新返回按钮
+             * @param {string} currentPage - 当前页面
+             */
+            updateBackButton(currentPage) {
+                const backBtn = document.getElementById('backBtn');
+                if (currentPage === 'home') {
+                    backBtn.classList.add('hidden');
+                } else {
+                    backBtn.classList.remove('hidden');
+                    backBtn.onclick = () => {
+                        const backMap = {
+                            create: 'home',
+                            activity: 'home',
+                            round: state.roundReturnPage || 'activity',
+                            rounds: 'activity',
+                            results: 'home'
+                        };
+                        this.show(backMap[currentPage] || 'home', this.getActivityIdForPage(currentPage));
+                    };
+                }
+            }
+        };
+
+        // ============================================
+        // 渲染器
+        // ============================================
+        const renderers = {
+            /**
+             * 渲染首页
+             */
+            home() {
+                const activities = storage.getActivities();
+
+                // 检查自动结束
+                activities.forEach(activity => app.checkAutoFinish(activity));
+
+                const active = activities
+                    .filter(a => a.status === 'ongoing')
+                    .sort((a, b) => b.createdAt - a.createdAt);
+
+                const finished = activities
+                    .filter(a => a.status === 'finished')
+                    .sort((a, b) => (b.endedAt || b.createdAt) - (a.endedAt || a.createdAt))
+                    .slice(0, 10);
+
+                // 更新问候语
+                document.getElementById('greeting').textContent = ui.getGreeting();
+
+                // 渲染进行中活动
+                const activeSection = document.getElementById('activeSection');
+                const activeList = document.getElementById('activeList');
+                if (active.length === 0) {
+                    activeSection.style.display = 'none';
+                } else {
+                    activeSection.style.display = 'block';
+                    activeList.innerHTML = active.map(activity => this.activityCard(activity, true)).join('');
+                }
+
+                // 渲染历史记录
+                const historyList = document.getElementById('historyList');
+                if (finished.length === 0) {
+                    historyList.innerHTML = ui.emptyState('history', '暂无历史记录');
+                } else {
+                    historyList.innerHTML = finished.map(activity => this.activityCard(activity, false)).join('');
+                }
+            },
+
+            /**
+             * 创建活动卡片HTML
+             * @param {Object} activity - 活动对象
+             * @param {boolean} isActive - 是否进行中
+             * @returns {string} HTML字符串
+             */
+            activityCard(activity, isActive) {
+                const leader = app.getLeader(activity);
+                const duration = app.formatDuration(Date.now() - activity.createdAt);
+                const dateStr = isActive ? duration : app.formatDate(activity.endedAt || activity.createdAt);
+                const targetPage = isActive ? 'activity' : 'results';
+
+                return `
+                    <div onclick="pages.show('${targetPage}', '${activity.id}')"
+                         class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-semibold text-gray-900 dark:text-white">${activity.name}</h4>
+                                <p class="text-sm text-gray-500">${activity.players.length} 人 · ${dateStr}</p>
+                            </div>
+                            ${ui.statusBadge(activity.status)}
+                        </div>
+                        ${leader ? `
+                        <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                            ${isActive ? '' : '<span class="text-xs text-gray-500">胜者</span>'}
+                            <div class="w-5 h-5 rounded-full" style="background-color: ${leader.color}"></div>
+                            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">${leader.nickname}</span>
+                            ${isActive ? `<span class="text-sm font-bold text-primary ml-auto">${leader.totalScore}</span>` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            },
+
+            /**
+             * 渲染创建页面
+             */
+            create() {
+                const colors = app.getPlayerColors();
+                const units = app.getScoreUnits();
+
+                // 渲染积分单位按钮
+                const unitGrid = document.getElementById('scoreUnitGrid');
+                unitGrid.innerHTML = units.map((unit, i) =>
+                    ui.scoreUnitButton(unit, i === 0)
+                ).join('');
+
+                // 绑定积分单位点击事件
+                unitGrid.querySelectorAll('.score-unit-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        unitGrid.querySelectorAll('.score-unit-btn').forEach(b => {
+                            b.className = 'score-unit-btn py-3 rounded-xl font-semibold text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600';
+                        });
+                        btn.className = 'score-unit-btn py-3 rounded-xl font-semibold text-sm bg-primary text-white shadow-lg shadow-blue-500/25';
+                        document.getElementById('scoreUnit').value = btn.dataset.unit;
+                    };
+                });
+
+                // 渲染玩家输入
+                const playerInputs = document.getElementById('playerInputs');
+                const renderPlayerInputs = (count) => {
+                    playerInputs.innerHTML = '';
+                    for (let i = 0; i < count; i++) {
+                        playerInputs.innerHTML += ui.playerInput(i, colors[i], `玩家${i + 1}`);
+                    }
+                };
+
+                const playerCountSlider = document.getElementById('playerCount');
+                const playerCountDisplay = document.getElementById('playerCountDisplay');
+
+                playerCountSlider.oninput = (e) => {
+                    const count = parseInt(e.target.value);
+                    playerCountDisplay.textContent = count;
+                    renderPlayerInputs(count);
+                };
+
+                renderPlayerInputs(4);
+
+                // 绑定表单提交
+                document.getElementById('createForm').onsubmit = (e) => {
+                    e.preventDefault();
+                    actions.createActivity();
+                };
+            },
+
+            /**
+             * 渲染活动概览页
+             */
+            activity() {
+                state.currentActivity = storage.getActivity(state.currentActivityId);
+                if (!state.currentActivity) {
+                    pages.show('home');
+                    return;
+                }
+
+                // 检查自动结束
+                if (app.checkAutoFinish(state.currentActivity)) {
+                    state.currentActivity = storage.getActivity(state.currentActivityId);
+                }
+
+                if (state.currentActivity.status === 'finished') {
+                    pages.show('results', state.currentActivityId);
+                    return;
+                }
+
+                const stats = app.getActivityStats(state.currentActivity);
+                const activity = state.currentActivity;
+
+                // 活动信息
+                document.getElementById('activityTitle').textContent = activity.name;
+                document.getElementById('activityTime').textContent = app.formatFullDate(activity.createdAt);
+
+                const locationEl = document.getElementById('activityLocation');
+                if (activity.location) {
+                    locationEl.textContent = activity.location;
+                    locationEl.classList.remove('hidden');
+                } else {
+                    locationEl.classList.add('hidden');
+                }
+
+                // 统计卡片
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+                        <div class="text-sm text-gray-500 mb-1">时长</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-white">${app.formatDuration(stats.duration)}</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+                        <div class="text-sm text-gray-500 mb-1">总轮数</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRounds}轮</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 col-span-2">
+                        <div class="text-sm text-gray-500 mb-1">单轮最高分</div>
+                        ${stats.maxRoundScore ? `
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full" style="background-color: ${stats.maxRoundScore.player.color}"></div>
+                                <div class="text-lg font-bold text-gray-900 dark:text-white">${stats.maxRoundScore.player.nickname}</div>
+                                <div class="text-lg font-bold text-primary ml-auto">${stats.maxRoundScore.score}</div>
+                            </div>
+                        ` : '<div class="text-gray-500">暂无数据</div>'}
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 col-span-2">
+                        <div class="text-sm text-gray-500 mb-1">当前第一</div>
+                        <div class="flex items-center gap-3">
+                            ${stats.topPlayer ? `
+                                <div class="w-8 h-8 rounded-full" style="background-color: ${stats.topPlayer.color}"></div>
+                                <div class="text-lg font-bold text-gray-900 dark:text-white">${stats.topPlayer.nickname}</div>
+                                <div class="text-lg font-bold text-primary ml-auto">${stats.topPlayer.totalScore}</div>
+                            ` : '<div class="text-gray-500">暂无数据</div>'}
+                        </div>
+                    </div>
+                `;
+
+                // 排行榜
+                document.getElementById('leaderboard').innerHTML = stats.playerStats.map((player, i) => `
+                    <div class="flex items-center px-4 py-3">
+                        ${ui.rankBadge(player.rank)}
+                        <div class="w-3 h-10 rounded-full ml-3 mr-3" style="background-color: ${player.color}"></div>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-900 dark:text-white">${player.nickname}</div>
+                        </div>
+                        <div class="font-bold text-gray-900 dark:text-white">${player.totalScore}</div>
+                    </div>
+                `).join('');
+
+                // 最近轮次
+                this.renderRoundList('recentRounds', activity.rounds.slice(-3).reverse(), activity, true);
+            },
+
+            /**
+             * 渲染轮次列表
+             * @param {string} containerId - 容器ID
+             * @param {Array} rounds - 轮次数组
+             * @param {Object} activity - 活动对象
+             * @param {boolean} isCompact - 是否紧凑模式
+             */
+            renderRoundList(containerId, rounds, activity, isCompact = false) {
+                const container = document.getElementById(containerId);
+                if (rounds.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-400 py-4">暂无轮次</p>';
+                    return;
+                }
+
+                container.innerHTML = rounds.map(round => {
+                    const maxScore = Math.max(...round.scores);
+                    const winnerIndex = round.scores.indexOf(maxScore);
+                    const winner = activity.players[winnerIndex];
+                    const cols = Math.min(activity.players.length, 4);
+
+                    return `
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-semibold text-gray-900 dark:text-white">第${round.roundNumber}轮</span>
+                                ${maxScore > 0 ? `<span class="text-xs text-primary">${winner.nickname} +${maxScore}</span>` : ''}
+                            </div>
+                            <div class="grid grid-cols-${cols} gap-2">
+                                ${activity.players.map((p, i) => `
+                                    <div class="text-center p-2 rounded-lg ${round.scores[i] === maxScore && maxScore > 0 ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800' : 'bg-gray-50 dark:bg-gray-700'}">
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">${p.nickname}</div>
+                                        ${ui.scoreDisplay(round.scores[i], true)}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            /**
+             * 渲染积分录入页
+             */
+            round() {
+                if (!state.currentActivity && state.currentActivityId) {
+                    state.currentActivity = storage.getActivity(state.currentActivityId);
+                }
+
+                if (!state.currentActivity || state.currentActivity.status !== 'ongoing') {
+                    pages.show('activity', state.currentActivityId);
+                    return;
+                }
+
+                if (state.currentActivity.rounds.length >= 1000) {
+                    ui.alert('已达到最大轮次限制（1000轮）');
+                    pages.show('activity', state.currentActivityId);
+                    return;
+                }
+
+                const activity = state.currentActivity;
+                const isEditing = state.editingRoundIndex >= 0;
+
+                // 标题
+                document.getElementById('roundTitle').textContent = isEditing
+                    ? `编辑第${activity.rounds[state.editingRoundIndex].roundNumber}轮`
+                    : `第${activity.rounds.length + 1}轮`;
+
+                // 初始化状态
+                state.currentRoundUnit = activity.scoreUnit;
+                state.currentRoundScores = isEditing
+                    ? [...activity.rounds[state.editingRoundIndex].scores]
+                    : new Array(activity.players.length).fill(0);
+
+                // 渲染积分单位按钮
+                const unitGrid = document.getElementById('roundScoreUnitGrid');
+                const units = app.getScoreUnits();
+                unitGrid.innerHTML = units.map(unit =>
+                    ui.scoreUnitButton(unit, unit === state.currentRoundUnit)
+                ).join('');
+
+                unitGrid.querySelectorAll('.score-unit-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        state.currentRoundUnit = parseInt(btn.dataset.unit);
+                        this.updateRoundUnitButtons();
+                    };
+                });
+
+                // 渲染玩家列表
+                this.renderRoundPlayers();
+                this.checkBalance();
+            },
+
+            /**
+             * 更新积分单位按钮状态
+             */
+            updateRoundUnitButtons() {
+                const buttons = document.querySelectorAll('#roundScoreUnitGrid .score-unit-btn');
+                buttons.forEach(btn => {
+                    const unit = parseInt(btn.dataset.unit);
+                    const isActive = unit === state.currentRoundUnit;
+                    btn.className = isActive
+                        ? 'score-unit-btn py-3 rounded-xl font-semibold text-sm bg-primary text-white shadow-lg shadow-blue-500/25'
+                        : 'score-unit-btn py-3 rounded-xl font-semibold text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600';
+                });
+            },
+
+            /**
+             * 渲染积分录入玩家列表
+             */
+            renderRoundPlayers() {
+                const container = document.getElementById('roundPlayersList');
+                const activity = state.currentActivity;
+
+                container.innerHTML = activity.players.map((player, index) => {
+                    const currentTotal = app.getPlayerTotal(activity, index);
+                    const newTotal = currentTotal + state.currentRoundScores[index];
+
+                    return `
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-1 h-10 rounded-full" style="background-color: ${player.color}"></div>
+                                    <div>
+                                        <div class="font-semibold text-gray-900 dark:text-white">${player.nickname}</div>
+                                        <div class="text-sm text-gray-500">当前总分: ${newTotal}</div>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white" id="round-score-${index}">
+                                    ${state.currentRoundScores[index]}
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center gap-4">
+                                <button onclick="actions.adjustScore(${index}, -1)"
+                                    class="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors">
+                                    <span class="material-symbols-outlined">remove</span>
+                                </button>
+                                <button onclick="actions.adjustScore(${index}, 1)"
+                                    class="w-12 h-12 rounded-xl bg-primary text-white hover:bg-blue-600 flex items-center justify-center transition-colors shadow-lg shadow-blue-500/25">
+                                    <span class="material-symbols-outlined">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            /**
+             * 检查积分平衡
+             */
+            checkBalance() {
+                const sum = state.currentRoundScores.reduce((a, b) => a + b, 0);
+                const warning = document.getElementById('balanceWarning');
+                const saveBtn = document.getElementById('saveRoundBtn');
+
+                if (sum !== 0) {
+                    warning.classList.remove('hidden');
+                    saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    saveBtn.disabled = true;
+                } else {
+                    warning.classList.add('hidden');
+                    saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    saveBtn.disabled = false;
+                }
+            },
+
+            /**
+             * 渲染轮次历史页
+             */
+            rounds() {
+                if (!state.currentActivity && state.currentActivityId) {
+                    state.currentActivity = storage.getActivity(state.currentActivityId);
+                }
+
+                if (!state.currentActivity) {
+                    pages.show('home');
+                    return;
+                }
+
+                const activity = state.currentActivity;
+                const container = document.getElementById('roundsList');
+                const emptyState = document.getElementById('emptyRounds');
+
+                if (activity.rounds.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+
+                container.innerHTML = activity.rounds.slice().reverse().map((round, reverseIndex) => {
+                    const index = activity.rounds.length - 1 - reverseIndex;
+                    const maxScore = Math.max(...round.scores);
+                    const winnerIndex = round.scores.indexOf(maxScore);
+                    const winner = activity.players[winnerIndex];
+                    const cols = Math.min(activity.players.length, 4);
+
+                    return `
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden" data-round="${index}">
+                            <div class="p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-gray-900 dark:text-white">第${round.roundNumber}轮</span>
+                                        <span class="text-sm text-gray-500">${app.formatDate(round.timestamp)}</span>
+                                    </div>
+                                    ${maxScore > 0 ? `
+                                    <div class="flex items-center gap-1 text-sm text-primary">
+                                        <span class="material-symbols-outlined text-sm">emoji_events</span>
+                                        ${winner.nickname} +${maxScore}
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                <div class="grid grid-cols-${cols} gap-2">
+                                    ${activity.players.map((player, pi) => `
+                                        <div class="text-center p-2 rounded-lg ${round.scores[pi] === maxScore && maxScore > 0 ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800' : 'bg-gray-50 dark:bg-gray-700'}">
+                                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">${player.nickname}</div>
+                                            ${ui.scoreDisplay(round.scores[pi], true)}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ${activity.status === 'ongoing' ? `
+                            <div class="flex border-t border-gray-100 dark:border-gray-700">
+                                <button onclick="actions.editRound(${index})" class="flex-1 py-3 text-primary font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                    编辑
+                                </button>
+                                <div class="w-px bg-gray-100 dark:bg-gray-700"></div>
+                                <button onclick="actions.deleteRound(${index})" class="flex-1 py-3 text-red-500 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                    删除
+                                </button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            /**
+             * 渲染结果页
+             */
+            results() {
+                state.currentActivity = storage.getActivity(state.currentActivityId);
+                if (!state.currentActivity) {
+                    pages.show('home');
+                    return;
+                }
+
+                const activity = state.currentActivity;
+                const stats = app.getActivityStats(activity);
+
+                // 胜者信息
+                if (stats.topPlayer) {
+                    document.getElementById('winnerName').textContent = stats.topPlayer.nickname;
+                    document.getElementById('winnerScore').textContent = stats.topPlayer.totalScore;
+                }
+
+                // 活动信息
+                document.getElementById('resultActivityName').textContent = activity.name;
+                document.getElementById('resultStartTime').textContent = app.formatFullDate(activity.createdAt);
+                document.getElementById('resultEndTime').textContent = activity.endedAt
+                    ? app.formatFullDate(activity.endedAt)
+                    : '进行中';
+
+                const locationRow = document.getElementById('resultLocationRow');
+                if (activity.location) {
+                    document.getElementById('resultLocation').textContent = activity.location;
+                    locationRow.style.display = 'flex';
+                } else {
+                    locationRow.style.display = 'none';
+                }
+
+                // 统计
+                document.getElementById('resultStatsGrid').innerHTML = `
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">活动时长</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-white">${app.formatDuration(stats.duration)}</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">总轮数</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-white">${stats.totalRounds}轮</div>
+                    </div>
+                `;
+
+                // 最终排名
+                document.getElementById('resultLeaderboard').innerHTML = stats.playerStats.map((player, i) => `
+                    <div class="flex items-center bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold ${i < 3 ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400'}">
+                            ${player.rank}
+                        </div>
+                        <div class="w-3 h-10 rounded-full ml-3 mr-3" style="background-color: ${player.color}"></div>
+                        <div class="flex-1 font-medium text-gray-900 dark:text-white">${player.nickname}</div>
+                        <div class="font-bold text-gray-900 dark:text-white">${player.totalScore}</div>
+                    </div>
+                `).join('');
+            }
+        };
+
+        // ============================================
+        // 操作处理
+        // ============================================
+        const actions = {
+            /**
+             * 创建活动
+             */
+            createActivity() {
+                const name = document.getElementById('createActivityName').value;
+                const location = document.getElementById('location').value;
+                const playerCount = parseInt(document.getElementById('playerCount').value);
+                const scoreUnit = parseInt(document.getElementById('scoreUnit').value);
+
+                const playerNames = [];
+                for (let i = 0; i < playerCount; i++) {
+                    const input = document.querySelector(`[name="player${i}"]`);
+                    playerNames.push(input ? input.value : `玩家${i + 1}`);
+                }
+
+                try {
+                    const activity = app.createActivity(name, location, playerNames, scoreUnit);
+                    storage.saveActivity(activity);
+                    pages.show('activity', activity.id);
+                } catch (e) {
+                    ui.alert(e.message);
+                }
+            },
+
+            /**
+             * 调整积分
+             * @param {number} index - 玩家索引
+             * @param {number} direction - 方向 (1/-1)
+             */
+            adjustScore(index, direction) {
+                state.currentRoundScores[index] += direction * state.currentRoundUnit;
+                document.getElementById(`round-score-${index}`).textContent = state.currentRoundScores[index];
+                renderers.renderRoundPlayers();
+                renderers.checkBalance();
+            },
+
+            /**
+             * 保存轮次
+             */
+            saveRound() {
+                const sum = state.currentRoundScores.reduce((a, b) => a + b, 0);
+                if (sum !== 0) {
+                    ui.alert('本轮积分必须平衡（总和为0）');
+                    return;
+                }
+
+                try {
+                    if (state.editingRoundIndex >= 0) {
+                        // 编辑模式
+                        const returnPage = state.roundReturnPage || 'activity';
+                        app.updateRound(state.currentActivity, state.editingRoundIndex, state.currentRoundScores);
+                        state.currentActivity = storage.getActivity(state.currentActivityId);
+                        state.editingRoundIndex = -1;
+                        state.roundReturnPage = null;
+                        if (returnPage === 'rounds') {
+                            pages.show('rounds', state.currentActivityId);
+                        } else {
+                            renderers.activity();
+                            pages.show('activity', state.currentActivityId);
+                        }
+                    } else {
+                        // 新增模式
+                        app.addRound(state.currentActivity, state.currentRoundScores);
+                        state.currentActivity = storage.getActivity(state.currentActivityId);
+                        state.editingRoundIndex = -1;
+                        state.roundReturnPage = null;
+                        renderers.activity();
+                        pages.show('activity', state.currentActivityId);
+                    }
+                } catch (e) {
+                    ui.alert(e.message);
+                }
+            },
+
+            /**
+             * 结束活动
+             */
+            finishActivity(activityId = state.currentActivityId) {
+                if (!ui.confirm('确定要结束这个活动吗？结束后将无法继续录入积分。')) return;
+                app.finishActivity(state.currentActivity);
+                pages.show('results', activityId);
+            },
+
+            /**
+             * 编辑轮次
+             * @param {number} index - 轮次索引
+             */
+            editRound(index) {
+                state.editingRoundIndex = index;
+                state.roundReturnPage = pages.currentPage === 'rounds' ? 'rounds' : 'activity';
+                pages.show('round', state.currentActivityId);
+            },
+
+            /**
+             * 删除轮次
+             * @param {number} index - 轮次索引
+             */
+            deleteRound(index) {
+                if (!ui.confirm(`确定要删除第${index + 1}轮吗？`)) return;
+                app.deleteRound(state.currentActivity, index);
+                renderers.rounds();
+            },
+
+            /**
+             * 跳转到指定轮次
+             */
+            jumpToRound() {
+                const input = document.getElementById('jumpInput');
+                const roundNumber = parseInt(input.value);
+                if (!roundNumber || roundNumber < 1 || roundNumber > state.currentActivity.rounds.length) {
+                    ui.alert('请输入有效的轮次号');
+                    return;
+                }
+                const index = roundNumber - 1;
+                const element = document.querySelector(`[data-round="${index}"]`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    element.classList.add('ring-2', 'ring-primary');
+                    setTimeout(() => element.classList.remove('ring-2', 'ring-primary'), 2000);
+                }
+            },
+
+            /**
+             * 生成分享图片
+             */
+            generateShareImage() {
+                const element = document.getElementById('shareContent');
+                html2canvas(element, {
+                    backgroundColor: '#ffffff',
+                    scale: 2
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `ScoreTrack-${state.currentActivity.name}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                }).catch(err => {
+                    console.error('生成图片失败:', err);
+                    ui.alert('生成图片失败，请重试');
+                });
+            },
+
+            /**
+             * 分享活动
+             */
+            shareActivity(activityId = state.currentActivityId) {
+                pages.show('results', activityId);
+            }
+        };
+
+        // ============================================
+        // 初始化
+        // ============================================
+
+
+
+        // 主题切换
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            theme.toggle();
+            document.getElementById('themeIcon').textContent = theme.getIcon();
+        });
+
+        // 初始化主题
+        theme.init();
+        document.getElementById('themeIcon').textContent = theme.getIcon();
+
+        // 初始渲染
+        pages.restoreFromUrl();
+    </script>
+</body>
+</html>

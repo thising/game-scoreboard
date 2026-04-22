@@ -1,0 +1,12 @@
+# Development notes - not for release
+memory/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

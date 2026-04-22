@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ScoreTrack - Dashboard</title>
+<!-- Google Fonts: Lexend -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"tertiary-container": "#bf3003", "inverse-on-surface": "#2e303a", "primary-fixed": "#dde1ff", "surface-tint": "#b7c4ff", "primary-container": "#0052ff", "on-tertiary": "#611300", "surface-dim": "#11131c", surface: "#11131c", "on-secondary-fixed-variant": "#38485d", "outline-variant": "#434656", "on-secondary-fixed": "#0b1c30", "tertiary-fixed": "#ffdbd2", primary: "#b7c4ff", "on-primary": "#002682", "surface-bright": "#373943", "on-primary-fixed-variant": "#0038b6", "primary-fixed-dim": "#b7c4ff", "on-secondary-container": "#a9bad3", "on-surface-variant": "#c3c5d9", "on-error": "#690005", "inverse-surface": "#e1e1ef", "on-background": "#e1e1ef", "inverse-primary": "#004ced", error: "#ffb4ab", "secondary-fixed-dim": "#b7c8e1", tertiary: "#ffb4a1", "surface-container-lowest": "#0c0e17", "surface-container": "#1d1f29", "error-container": "#93000a", "on-primary-container": "#dfe3ff", background: "#11131c", "on-secondary": "#213145", "on-surface": "#e1e1ef", "on-tertiary-fixed-variant": "#891e00", "tertiary-fixed-dim": "#ffb4a1", "surface-container-low": "#191b25", "secondary-container": "#3a4a5f", "surface-container-highest": "#32343f", "on-tertiary-fixed": "#3c0800", "on-primary-fixed": "#001452", "surface-container-high": "#282934", outline: "#8d90a2", "secondary-fixed": "#d3e4fe", "on-tertiary-container": "#ffddd5", secondary: "#b7c8e1", "surface-variant": "#32343f", "on-error-container": "#ffdad6"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {gutter: "12px", "container-padding": "16px", "card-gap": "16px", unit: "4px", "touch-target-min": "44px"}, fontFamily: {"body-sm": ["Lexend"], "label-caps": ["Lexend"], "headline-lg": ["Lexend"], "display-score": ["Lexend"], "body-lg": ["Lexend"], "headline-md": ["Lexend"]}, fontSize: {"body-sm": ["14px", {lineHeight: "1.5", fontWeight: "400"}], "label-caps": ["12px", {lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600"}], "headline-lg": ["24px", {lineHeight: "1.3", fontWeight: "600"}], "display-score": ["48px", {lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700"}], "body-lg": ["16px", {lineHeight: "1.5", fontWeight: "400"}], "headline-md": ["20px", {lineHeight: "1.3", fontWeight: "600"}]}}}};</script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body-sm text-on-background min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-[#F8FAFC] dark:bg-slate-900 text-[#0052FF] dark:text-blue-400 font-['Lexend'] font-bold text-lg tracking-tight docked full-width top-0 border-b border-slate-100 dark:border-slate-800 flat no shadows flex justify-between items-center w-full px-4 h-16 max-w-7xl mx-auto md:hidden shrink-0">
+<div class="flex items-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-95 transition-transform w-10 h-10 overflow-hidden cursor-pointer">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close up portrait of a young man smiling with a blurred background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6WfopYxDfAHBK6udd3Xg0wvQWTJnH4YVKggBv-nFd8QIgOKiJ9u4HkimMTnkGlOsNUAIHiw5botHPm25KcYSRx0piwvCbgXjIqPTNVcapwKYXLBoYEkQiUnfMakywJE869qLfoBy2e8Z09mzEDUARmBazxU75GBOjsugtHC7LjIeoyRzQ50tiN6ARmIn7TMGY8Lj3VMLEMdlhulYTNSMclre15dlqhQnZzB9oAc-yxkWFhS097KOtTSsT96QDcAuND2Ik0ng2Hsta"/>
+</div>
+<div class="text-xl font-black text-[#0052FF] dark:text-blue-400">
+            ScoreTrack
+        </div>
+<button class="flex items-center justify-center w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-95 transition-transform text-[#0052FF] dark:text-blue-400">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-md mx-auto px-container-padding py-6 flex flex-col gap-6 md:max-w-3xl">
+<!-- Greeting & Primary Action -->
+<section class="flex flex-col gap-4">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Ready to play, Alex?</h1>
+<button class="w-full bg-primary text-on-primary rounded-lg flex items-center justify-center py-3 px-4 gap-2 shadow-[0_4px_8px_rgba(0,0,0,0.05)] min-h-[44px] active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+<span class="font-label-caps text-label-caps uppercase">Start New Activity</span>
+</button>
+</section>
+<!-- Active Session Card -->
+<section class="bg-surface-container-lowest rounded-xl p-container-padding shadow-[0_4px_8px_rgba(0,0,0,0.05)] border border-surface-variant">
+<div class="flex justify-between items-center border-b border-surface-variant pb-3 mb-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+<span class="font-label-caps text-label-caps text-secondary uppercase">Active Session</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary font-mono">01:23:45</span>
+</div>
+<div class="flex flex-col gap-1 mb-4">
+<h2 class="font-headline-md text-headline-md text-on-surface">Friday Poker</h2>
+<p class="font-body-sm text-body-sm text-secondary">Texas Hold'em - No Limit</p>
+</div>
+<div class="bg-surface-container-low rounded-lg p-3 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary font-label-caps text-label-caps">M</div>
+<span class="font-body-lg text-body-lg text-on-surface font-medium">Mike (Current Leader)</span>
+</div>
+<span class="font-headline-md text-headline-md text-primary">+450</span>
+</div>
+</section>
+<!-- Recent History -->
+<section class="flex flex-col gap-3">
+<h3 class="font-headline-md text-headline-md text-on-surface pl-1">Recent History</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_8px_rgba(0,0,0,0.05)] border border-surface-variant overflow-hidden flex flex-col">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low transition-colors cursor-pointer active:bg-surface-variant">
+<div class="flex flex-col gap-1">
+<span class="font-body-lg text-body-lg text-on-surface font-medium">Catan Night</span>
+<span class="font-body-sm text-body-sm text-secondary">Oct 24, 2023</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-secondary mr-1">Winner</span>
+<div class="w-5 h-5 rounded-full bg-primary-container"></div>
+<span class="font-body-sm text-body-sm text-on-surface">Alex</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low transition-colors cursor-pointer active:bg-surface-variant">
+<div class="flex flex-col gap-1">
+<span class="font-body-lg text-body-lg text-on-surface font-medium">Golf Group A</span>
+<span class="font-body-sm text-body-sm text-secondary">Oct 21, 2023</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-secondary mr-1">Winner</span>
+<div class="w-5 h-5 rounded-full bg-secondary"></div>
+<span class="font-body-sm text-body-sm text-on-surface">Sarah</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low transition-colors cursor-pointer active:bg-surface-variant">
+<div class="flex flex-col gap-1">
+<span class="font-body-lg text-body-lg text-on-surface font-medium">Scrabble</span>
+<span class="font-body-sm text-body-sm text-secondary">Oct 18, 2023</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-secondary mr-1">Winner</span>
+<div class="w-5 h-5 rounded-full bg-tertiary-container"></div>
+<span class="font-body-sm text-body-sm text-on-surface">Mike</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Tips Section -->
+<section class="mt-4 mb-8">
+<div class="bg-primary-container/10 border border-primary-container/20 rounded-xl p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5">lightbulb</span>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-[10px] text-primary uppercase tracking-wider">Daily Tip</span>
+<p class="font-body-sm text-on-surface italic italic">
+        "Every game is a chance to improve. Keep playing!"
+      </p>
+</div>
+</div>
+</section></main>
+</body></html>
