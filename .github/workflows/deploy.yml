@@ -12,16 +12,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy via rsync
-        uses: burnett01/rsync-deployments@6.0.0
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          switches: -avz --delete
-          path: src/
-          remote_path: ${{ secrets.DEPLOY_PATH }}
-          remote_host: ${{ secrets.SERVER_HOST }}
-          remote_port: ${{ secrets.SERVER_PORT }}
-          remote_user: ${{ secrets.SERVER_USER }}
-          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add host to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -p ${{ vars.SERVER_PORT }} -H ${{ vars.SERVER_HOST }} >> ~/.ssh/known_hosts 2>&1 || echo "⚠️ ssh-keyscan failed, continuing..."
+
+      - name: Deploy via rsync
+        env:
+          SERVER_HOST: ${{ vars.SERVER_HOST }}
+          SERVER_PORT: ${{ vars.SERVER_PORT }}
+          SERVER_USER: ${{ vars.SERVER_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          echo "🚀 开始部署..."
+          rsync -avz --delete -e "ssh -p $SERVER_PORT" src/ $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/
+          echo "✅ 部署完成"
 
       - name: Health check
         run: |
