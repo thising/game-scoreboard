@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>游戏积分记录 - ScoreTrack</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 关键：Tailwind 配置必须在 CDN 加载前定义 -->
     <script>
-        tailwind.config = {
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
@@ -27,6 +28,7 @@
             }
         };
     </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         (() => {
             try {

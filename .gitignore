@@ -1,6 +1,12 @@
 # Development notes - not for release
 memory/
 
+# Test data
+src/data/
+
+# Publish scripts
+publish.sh
+
 # OS files
 .DS_Store
 Thumbs.db
