@@ -1,0 +1,29 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via rsync
+        uses: burnett01/rsync-deployments@6.0.0
+        with:
+          switches: -avz --delete
+          path: src/
+          remote_path: ${{ secrets.DEPLOY_PATH }}
+          remote_host: ${{ secrets.SERVER_HOST }}
+          remote_port: ${{ secrets.SERVER_PORT }}
+          remote_user: ${{ secrets.SERVER_USER }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Health check
+        run: |
+          echo "✅ 部署完成"
+          echo "访问: https://win.clawing.work"
