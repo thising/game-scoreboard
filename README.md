@@ -17,6 +17,7 @@
 - **主题切换**：light / dark / auto 三种模式，跟随系统偏好
 - **路由恢复**：刷新页面保持当前位置
 - **分享功能**：生成活动结果图片
+- **扑克语录**：首页随机展示精选扑克智慧语录（中英文对照）
 
 ## 技术栈
 
@@ -58,20 +59,29 @@ npx serve src -l 3000
 
 ```
 game-scoreboard/
-├── README.md           # 项目说明
-├── .gitignore          # Git 忽略配置
-├── docs/               # 设计文档
+├── README.md              # 项目说明
+├── .gitignore             # Git 忽略配置
+├── docs/                  # 设计文档
 │   ├── 需求规格文档.md
 │   ├── 技术方案.md
-│   └── HTML模板参考/
-└── src/                # 源代码（可直接部署）
-    ├── index.html      # 主应用
-    └── js/
-        ├── app.js      # 核心逻辑
-        └── storage.js  # 存储模块
+│   └── stitch_templates/  # UI模板参考
+└── src/                   # 源代码（可直接部署）
+    ├── index.html         # 主应用
+    ├── js/
+    │   ├── app.js         # 核心逻辑
+    │   ├── storage.js     # 存储模块
+    │   └── quotes.js      # 扑克语录模块
+    └── data/
+        └── poker-quotes.json  # 100条精选语录
 ```
 
 ## 版本历史
+
+### v1.1.0 (2026-04-22)
+- 💡 新增扑克语录功能
+- 🎴 100条精选中英文对照语录
+- 🎲 首页随机展示，每次刷新不同
+- 📝 涵盖 Doyle Brunson、Phil Hellmuth 等传奇玩家名言
 
 ### v1.0.0 (2026-04-22)
 - 🎉 首次发布
