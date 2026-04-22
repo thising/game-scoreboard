@@ -4,8 +4,15 @@ memory/
 # Test data
 src/data/
 
+# Test files
+test-*.html
+verify-*.html
+
 # Publish scripts
 publish.sh
+
+# Dependencies
+node_modules/
 
 # OS files
 .DS_Store
@@ -15,6 +22,12 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
-*.swonode_modules/
-.DS_Store
+*.swo
+
+# Logs
 *.log
+npm-debug.log*
+
+# Build output (if any)
+dist/
+build/
